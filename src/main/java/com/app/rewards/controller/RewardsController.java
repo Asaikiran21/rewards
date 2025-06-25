@@ -21,7 +21,7 @@ public class RewardsController {
     }
 
     @GetMapping
-    public Map<String, Map<String, Long>> getAllRewards() {
+    public List<RewardResponse> getAllRewards() {
         return rewardsService.getRewardsSummaryForAllCustomers();
     }
 }

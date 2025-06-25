@@ -32,28 +32,26 @@ public class RewardsService {
      * get Reward points for all the customers
      * @return
      */
-    public Map<String, Map<String, Long>> getRewardsSummaryForAllCustomers() {
+    public List<RewardResponse> getRewardsSummaryForAllCustomers() {
         LocalDate threeMonthsAgo = LocalDate.now().minusMonths(3);
         List<Transaction> transactions = transactionRepository.findTransactionsByDate(threeMonthsAgo);
 
-        DateTimeFormatter monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
-        Map<String, Map<String, Long>> pointsSummary = new HashMap<>();
+        Map<String, Long> totalPointsPerCustomer = new HashMap<>();
 
         for (Transaction transaction : transactions) {
             String customerId = transaction.getCustomerId();
-            String month = transaction.getDate().format(monthFormatter);
             long points = calculatePoints(transaction.getAmount());
-            pointsSummary
-                    .computeIfAbsent(customerId, k -> new HashMap<>())
-                    .merge(month, points, Long::sum);
+            totalPointsPerCustomer.merge(customerId, points, Long::sum);
         }
-        // Add totals
-        pointsSummary.forEach((customer, months) -> {
-            long total = months.values().stream().mapToLong(Long::longValue).sum();
-            months.put("Total", total);
-        });
-        return pointsSummary;
+
+        List<RewardResponse> responseList = new ArrayList<>();
+        for (Map.Entry<String, Long> entry : totalPointsPerCustomer.entrySet()) {
+            responseList.add(new RewardResponse(entry.getKey(), entry.getValue()));
+        }
+
+        return responseList;
     }
+
 
     //Helper method for single customer computation
     private RewardResponse aggregatePoints(String customerId,List<Transaction> transactions) {

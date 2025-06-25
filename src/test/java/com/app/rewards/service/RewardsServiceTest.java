@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -78,14 +79,10 @@ class RewardsServiceTest {
 
         when(transactionRepository.findTransactionsByDate(any())).thenReturn(transactions);
 
-        Map<String, Map<String, Long>> summary = rewardsService.getRewardsSummaryForAllCustomers();
+       List<RewardResponse> summary = rewardsService.getRewardsSummaryForAllCustomers();
 
-        assertThat(summary).containsKeys("cust1", "cust2");
-        assertThat(summary.get("cust1")).containsEntry(now.minusMonths(1).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM")), 90L);
-        assertThat(summary.get("cust1")).containsEntry(now.minusMonths(2).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM")), 20L);
-        assertThat(summary.get("cust1")).containsEntry("Total", 110L);
-
-        assertThat(summary.get("cust2")).containsEntry(now.minusMonths(1).format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM")), 20L);
-        assertThat(summary.get("cust2")).containsEntry("Total", 20L);
+        assertThat(summary.stream().map(rewardResponse -> rewardResponse.getCustomerId()).collect(Collectors.toList())).contains("cust1", "cust2");
+        assertThat(summary.get(0).getTotalRewards()).isEqualTo(110L);
+        assertThat(summary.get(1).getTotalRewards()).isEqualTo(20L);
     }
 }
